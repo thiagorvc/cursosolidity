@@ -19,4 +19,9 @@ contract Aluguel
         locatario = paramlocatario;
         valor = valorDoAluguel;
     }
+    function valorDoAluguel () public view returns (uint256) {
+         return valor;
+    }
+    
+}
 }
