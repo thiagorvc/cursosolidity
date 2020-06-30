@@ -1,0 +1,15 @@
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity 0.6.10;
+
+contract ListaContratos {
+    uint256 CapexContracts;
+    uint256[1] OpexContracts;
+    uint256[2] FinanceContracts;
+    uint256[3] MAContracts;
+
+    struct Entry {
+        uint256 id;
+        uint256 value;
+    }
+    Entry OtherContracts;
+}
