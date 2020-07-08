@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
+
 pragma solidity ^ 0.6.10;
 
 contract Mediacao {
-    
+
     address payable Empresa01;
     address payable Empresa02;
     address payable Mediador;
@@ -18,20 +19,21 @@ contract Mediacao {
     uint256 DatadeFechamento;
 
     // Estagios da Mediação
-    
+
     enum State { Created, Premediation, Mediation, End }
     State public state;
 
     // Eventos da Mediação
-    
+
     event Creation();
     event Convocacao();
     event ConvocacaoFail();
     event MediacaoStarts();
     event MediacaoFinishesWithDeal();
     event MediacaoFinishesWithoutDeal();
-    
+
     // As Partes
+
     
     struct PartiesReg {
         string _name;
@@ -39,11 +41,11 @@ contract Mediacao {
         uint _phone;
         uint _id;
         address _wallet;
+
     }
-    
     uint partyCount = 0;
     mapping(uint => PartiesReg) public parties;
-    
+
      constructor(
         uint256 _HonorariosMediador
         ) public payable
@@ -52,6 +54,28 @@ contract Mediacao {
         HonorariosMediador=_HonorariosMediador;
         emit Creation();
         state = State.Created;
+
     }
-    
+
+    // Estagios Mediação
+
+    function mediacaoBalance() public view returns (uint) {
+        return address(this).balance;
+    }
+
+    function showHonorariosMediador() public view returns (uint) {
+        return HonorariosMediador;
+    }
+
+    function showValorTotalDoContrato() public view returns (uint) {
+        return ValorTotalDoContrato;
+
+    }
+
+        //modifiers
+
+    modifier condition(bool _condition) {
+        require(_condition);
+        _;
+    } 
 }
