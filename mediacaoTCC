@@ -1,0 +1,73 @@
+//ODR Online Dispute Resolution - Mediação - Uma maneira de se resolver os conflitos empresariais por meio da mediação online, 
+// que nada mais é que a realização das sessões de mediação por meio de uma plataforma online. 
+//Assim, é possível resolver conflitos sem que seja necessário que as partes estejam no mesmo lugar.
+
+pragma solidity ^ 0.6.10;
+
+contract Mediacao {
+
+    address payable Empresa01;
+    address payable Empresa02;
+    address payable Mediador;
+    string ObjetoDaMediacao;
+    uint256 ValorDaDisputa;
+    uint256 HonorariosMediador;
+    uint256 ValorTotalDoContrato;
+    uint256 DataDoConvite;
+    uint256 DeadlineDaResposta;
+    uint256 DataDeInicio;
+    uint256 DeadlineDaMediacao;
+    uint256 DataDoAcordo;
+    uint256 DatadeFechamento;   
+
+    // Estagios da Mediação
+
+    enum State { Created, Premediation, Mediation, End }
+    State public state;
+
+    // Eventos da Mediação
+
+    event Creation();
+    event Convocacao();
+    event ConvocacaoFail();
+    event MediacaoStarts();
+    event MediacaoFinishesWithDeal();
+    event MediacaoFinishesWithoutDeal();
+
+    // As Partes
+
+    struct PartiesReg {
+        string _name;
+        string _email;
+        uint _phone;
+        uint _id;
+        address _wallet;
+
+    }
+    
+     constructor(
+        uint256 _HonorariosMediador
+        ) public payable
+        {
+        Mediador = msg.sender;
+        HonorariosMediador=_HonorariosMediador;
+        emit Creation();
+        state = State.Created;
+
+    }
+
+    // Mostrar Valores
+
+    function mediacaoBalance() public view returns (uint) {
+        return address(this).balance;
+    }
+
+    function showHonorariosMediador() public view returns (uint) {
+        return HonorariosMediador;
+    }
+
+    function showValorTotalDoContrato() public view returns (uint) {
+        return ValorTotalDoContrato;
+
+        } 
+}
