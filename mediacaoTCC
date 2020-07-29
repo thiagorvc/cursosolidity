@@ -37,9 +37,6 @@ contract Mediacao {
         address _wallet;
     }
     
-    uint partyCount = 0;
-    mapping(uint => PartiesReg) public parties;
-    
     //constructor
     
         constructor(
@@ -78,13 +75,12 @@ contract Mediacao {
         address _wallet
         )
         inState(State.Created)
-        condition(msg.value == (_ValorDisputa+(HonorariosMediador/2)))
+        condition(msg.value = (_ValorDisputa+(HonorariosMediador/2)))
         public
         payable
         {
         Empresa01 = msg.sender;
         ValorDisputa = _ValorDisputa;
-        partyCount += 1;
         Parties[partyCount] = PartiesReg ( _nome, _email, _Telefone, _id, _wallet);
         dateOfCall = now;
         dataFimConvite = now + 432000;
@@ -109,7 +105,6 @@ contract Mediacao {
         Empresa02 = msg.sender;
         dataInicioMediacao = now;
         dataFimMediacao = now + 432000;
-        partyCount += 1;
         parties[partyCount] = PartiesReg ( _nome, _email, _Telefone, _id, _wallet);
         emit MediationStarts();
         state = State.Premediation;
@@ -125,20 +120,22 @@ contract Mediacao {
         payable
         {
         dataAcordo = now;
-        dataOfFinishes = now;
+        dataFimMediacao = now;
         emit MediacaoComAcordo();
         state = State.End;
         Empresa01.transfer(address(this).balance);
     }
     
-    function agreementForParty02()
+    
+        function agreementForParty02()
         inState(State.End)
         onlyMediator
         public
         payable
         {
         dataAcordo = now;
-        emit MediacaoComAcordo
+        dataFimMediacao = now;
+        emit MediacaoComAcordo();
         state = State.End;
         Empresa02.transfer(address(this).balance);
     }
@@ -148,7 +145,6 @@ contract Mediacao {
     function finishMediacaoSemAcordo();
         inState(State.End)
         onlyMediator
-        condition(now > dataFimMediacao)
         public
         payable
         {
