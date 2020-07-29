@@ -1,73 +1,201 @@
-//ODR Online Dispute Resolution - Mediação - Uma maneira de se resolver os conflitos empresariais por meio da mediação online, 
-// que nada mais é que a realização das sessões de mediação por meio de uma plataforma online. 
-//Assim, é possível resolver conflitos sem que seja necessário que as partes estejam no mesmo lugar.
+// SPDX-License-Identifier: GPL-3.0
+
+//NORSK HYDRO _ SMART CONTRACTS - MEDIAÇÃO - TURN-KEY CONTRACTS.
+//VICE-PRESIDÊNCIA JURÍDICA E COMPLIANCE
 
 pragma solidity ^ 0.6.10;
 
 contract Mediacao {
+    
+    address payable party01;
+    address payable party02;
+    address payable mediator;
+    string disputeObject;
+    uint256 disputeValue;
+    uint256 mediationFee;
+    uint256 value;
+    uint256 dateOfCall;
+    uint256 dateOfInvite;
+    uint256 deadlineOfInvite;
+    uint256 dateOfStart;
+    uint256 deadlineOfMediation;
+    uint256 dateOfAgreement;
+    uint256 dataOfFinishes;
+    //string stage;
 
-    address payable Empresa01;
-    address payable Empresa02;
-    address payable Mediador;
-    string ObjetoDaMediacao;
-    uint256 ValorDaDisputa;
-    uint256 HonorariosMediador;
-    uint256 ValorTotalDoContrato;
-    uint256 DataDoConvite;
-    uint256 DeadlineDaResposta;
-    uint256 DataDeInicio;
-    uint256 DeadlineDaMediacao;
-    uint256 DataDoAcordo;
-    uint256 DatadeFechamento;   
-
-    // Estagios da Mediação
-
-    enum State { Created, Premediation, Mediation, End }
+    // Stages of mediation
+    
+    enum State { Created, mediation, Premediation, End }
     State public state;
 
-    // Eventos da Mediação
-
+    // Events in Mediation
+    
     event Creation();
-    event Convocacao();
-    event ConvocacaoFail();
-    event MediacaoStarts();
-    event MediacaoFinishesWithDeal();
-    event MediacaoFinishesWithoutDeal();
-
-    // As Partes
-
+    event Invite();
+    event InviteFail();
+    event MediationStarts();
+    event MediationFinishesWithDeal();
+    event MediationFinishesWithoutDeal();
+    
+    // Registrer of the parties
+    
     struct PartiesReg {
         string _name;
         string _email;
         uint _phone;
         uint _id;
         address _wallet;
-
     }
     
-     constructor(
-        uint256 _HonorariosMediador
+    uint partyCount = 0;
+    mapping(uint => PartiesReg) public parties;
+    
+    //constructor
+    
+    constructor(
+        uint256 _mediationFee
         ) public payable
         {
-        Mediador = msg.sender;
-        HonorariosMediador=_HonorariosMediador;
+        mediator = msg.sender;
+        mediationFee = _mediationFee;
         emit Creation();
         state = State.Created;
-
     }
-
-    // Mostrar Valores
-
-    function mediacaoBalance() public view returns (uint) {
+    
+    // mediation info
+    
+    function mediationBalance() public view returns (uint) {
         return address(this).balance;
     }
-
-    function showHonorariosMediador() public view returns (uint) {
-        return HonorariosMediador;
+    
+    function showMediationFee() public view returns (uint) {
+        return mediationFee;
+    }
+    
+    function showDisputeValue() public view returns (uint) {
+        return disputeValue;
+    }
+    
+    //modifiers
+    
+    modifier condition(bool _condition) {
+        require(_condition);
+        _;
     }
 
-    function showValorTotalDoContrato() public view returns (uint) {
-        return ValorTotalDoContrato;
+    modifier onlyMediator() {
+        require(msg.sender == mediator, "Only mediator can do this.");
+        _;
+    }
 
-        } 
-}
+    modifier onlyParty01() {
+        require(msg.sender == party01, "Only other party can do this");
+        _;
+    }
+    
+    modifier onlyParty02() {
+        require(msg.sender == party02, "Only other party can do this");
+        _;
+    }
+    
+    modifier inState(State _state) {
+        require(state == _state, "Invalid state.");
+        _;
+    }
+    
+    //Call for Mediation
+    
+    function callForMediation(
+        uint256 _disputeValue,
+        string memory _disputeObject, 
+        string memory _name, 
+        string memory _email, 
+        uint _phone, 
+        uint _id, 
+        address _wallet
+        )
+        inState(State.Created)
+        condition(msg.value == (_disputeValue+(mediationFee/2)))
+        public
+        payable
+        {
+        party01 = msg.sender;
+        disputeValue = _disputeValue;
+        disputeObject = _disputeObject;
+        partyCount += 1;
+        parties[partyCount] = PartiesReg ( _name, _email, _phone, _id, _wallet);
+        dateOfCall = now;
+        deadlineOfInvite = now + 604800;
+        emit Invite();
+        state = State.Premediation;
+    }
+    
+    // Other Party Accept Mediadtion
+    
+    function acceptMediation(
+        string memory _name, 
+        string memory _email, 
+        uint _phone, 
+        uint _id, 
+        address _wallet
+        )
+        inState(State.Premediation)
+        condition(msg.value == (disputeValue+(mediationFee/2)))
+        public
+        payable
+        {
+        party02 = msg.sender;
+        dateOfStart = now;
+        deadlineOfMediation = now + 604800;
+        partyCount += 1;
+        parties[partyCount] = PartiesReg ( _name, _email, _phone, _id, _wallet);
+        emit MediationStarts();
+        state = State.Premediation;
+        mediator.transfer(mediationFee);
+    }
+    
+        // Mediation finishes with agreement
+    
+    function agreementForParty01()
+        inState(State.End)
+        onlyMediator
+        public
+        payable
+        {
+        dateOfAgreement = now;
+        dataOfFinishes = now;
+        emit MediationFinishesWithDeal();
+        state = State.End;
+        party01.transfer(address(this).balance);
+    }
+    
+    function agreementForParty02()
+        inState(State.End)
+        onlyMediator
+        public
+        payable
+        {
+        dateOfAgreement = now;
+        dataOfFinishes = now;
+        emit MediationFinishesWithDeal();
+        state = State.End;
+        party02.transfer(address(this).balance);
+    }
+    
+    // Mediation finishes without agreement
+    
+    function finishWithoutDeal()
+        inState(State.End)
+        onlyMediator
+        condition(now > deadlineOfMediation)
+        public
+        payable
+        {
+        dataOfFinishes = now;
+        emit MediationFinishesWithoutDeal();
+        state = State.End;
+        party01.transfer(address(this).balance/2);
+        party02.transfer(address(this).balance/2);
+    }
+    
+} 
