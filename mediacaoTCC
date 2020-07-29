@@ -1,7 +1,8 @@
+
 //NORSK HYDRO _ SMARTCONTRACTS - MEDIAÇÃO - TURN-KEY CONTRACTS.
 //VICE-PRESIDÊNCIA JURÍDICA E COMPLIANCE
 
-pragma solidity >=0.4.22 <0.7.0;
+pragma solidity 0.6.11;
 
 contract Mediacao {
     
@@ -142,8 +143,8 @@ contract Mediacao {
     
     // Mediação finaliza sem Acordo
     
-    function finishMediacaoSemAcordo();
-        inState(State.End)
+    function MediacaoSemAcordo();
+        inState(State.End);
         onlyMediator
         public
         payable
