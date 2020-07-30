@@ -1,0 +1,124 @@
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity 0.6.10;
+
+contract Mediacao 
+{
+    address payable Empresa01;
+    address payable Empresa02;
+    address payable mediador;
+    string  disputeObject;
+    uint256 disputeValue;
+    uint256 mediationFee;
+    uint256 dataDaAbertura;
+    uint256 dataDoConvite;
+    uint256 deadlineDoConvite;
+    uint256 deadlineOfMediation;
+    uint256 dataDoAcordo;
+    uint256 dataFinal;
+    
+    // Estagios da Mediação
+    
+    enum State { Created, Mediation, End }
+    State public state;
+
+    // Fases da Mediação
+    
+    event Creation();
+    event MediationFinishesWithDeal();
+    event MediationFinishesWithoutDeal();
+    
+    // Registro das Partes
+    
+    struct PartiesReg {
+        string _name;
+        string _email;
+        uint _phone;
+        uint _id;
+        address _wallet;
+    }
+    
+    uint partyCount = 0;
+    mapping(uint => PartiesReg) public parties;
+    
+    //constructor
+    
+    constructor(uint256 _mediationFee) public payable
+        {
+        mediador = msg.sender;
+        mediationFee = _mediationFee;
+        emit Creation();
+        state = State.Created;
+    }
+    
+    // Mediação info
+    
+    function mediationBalance() public view returns (uint) {
+        return address(this).balance;
+    }
+    
+    function showMediationFee() public view returns (uint) {
+        return mediationFee;
+    }
+    
+    function showDisputeValue() public view returns (uint) {
+        return disputeValue;
+    }
+    
+    //Chamada para a Mediação
+    
+    function callForMediation(uint256 _disputeValue, string memory _disputeObject, string memory _name, string memory _email,uint _phone, uint _id, address _wallet) public payable
+        {
+        Empresa01 = msg.sender;
+        disputeValue = _disputeValue;
+        disputeObject = _disputeObject;
+        parties[partyCount] = PartiesReg ( _name, _email, _phone, _id, _wallet);
+        dataDaAbertura = now;
+        deadlineDoConvite = now + 432000;
+        state = State.Mediation;
+    }
+    
+    // Outra Parte Aceita a Mediação
+    
+    function acceptMediation( string memory _name, string memory _email, uint _phone, uint _id, address _wallet) public payable
+        {
+        Empresa02 = msg.sender;
+        dataDaAbertura = now;
+        deadlineOfMediation = now + 432000;
+        partyCount += 1;
+        parties[partyCount] = PartiesReg ( _name, _email, _phone, _id, _wallet);
+        state = State.Mediation;
+        mediador.transfer(mediationFee);
+    }
+    
+     // Mediação com Acordo
+    
+    function agreementForParty01() public payable
+        {
+        dataDoAcordo = now;
+        dataFinal = now;
+        emit MediationFinishesWithDeal();
+        state = State.End;
+        Empresa01.transfer(address(this).balance);
+    }
+    
+    function agreementForParty02() public payable
+        {
+        dataDoAcordo = now;
+        dataFinal = now;
+        emit MediationFinishesWithDeal();
+        state = State.End;
+        Empresa02.transfer(address(this).balance);
+    }
+    
+    // Mediação sem Acordo
+    
+    function finishWithoutDeal() public payable
+        {
+        dataFinal = now;
+        emit MediationFinishesWithoutDeal();
+        state = State.End;
+        Empresa01.transfer(address(this).balance/2);
+        Empresa02.transfer(address(this).balance/2);
+    }
+    
+} 
